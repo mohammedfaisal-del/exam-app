@@ -1,0 +1,24 @@
+
+{
+  "development": {
+    "username": "exam",
+    "password": "password",
+    "database": "exams_db",
+    "host": "mysql",
+    "dialect": "mysql"
+  },
+  "test": {
+     "username": "exam",
+    "password": "password",
+    "database": "exams_db",
+    "host": "mysql",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "exam",
+    "password": "password",
+    "database": "exams_db",
+    "host": "mysql",
+    "dialect": "mysql"
+  }
+}

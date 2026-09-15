@@ -1,0 +1,471 @@
+/* ===== Layout ===== */
+.page {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.page-narrow {
+  max-width: 450px;
+  margin: 80px auto;
+  padding: 0 20px;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* ===== Typography ===== */
+h1, h2, h3 {
+  color: #1a1a1a;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 14px;
+}
+
+/* ===== Forms ===== */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+}
+
+/* ===== Buttons ===== */
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+
+.btn-primary {
+  background: #4f46e5;
+  color: white;
+  width: 100%;
+}
+.btn-primary:hover { background: #4338ca; }
+.btn-primary:disabled { background: #a5a5a5; cursor: not-allowed; }
+
+.btn-success {
+  background: #2e7d32;
+  color: white;
+}
+.btn-success:hover { background: #256428; }
+.btn-success:disabled { background: #a5a5a5; cursor: not-allowed; }
+
+.btn-danger {
+  background: transparent;
+  color: #d32f2f;
+  border: 1px solid #d32f2f;
+  padding: 6px 12px;
+}
+.btn-danger:hover { background: #fdecea; }
+.btn-danger:disabled { color: #aaa; border-color: #ccc; cursor: not-allowed; }
+
+.btn-secondary {
+  background: #eee;
+  color: #333;
+}
+.btn-secondary:hover { background: #ddd; }
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+/* ===== Alerts ===== */
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+.alert-error { background: #fdecea; color: #c62828; border: 1px solid #f5c6cb; }
+.alert-success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+.alert-warning { background: #fff8e1; color: #f57f17; border: 1px solid #ffe082; }
+
+/* ===== Table ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 2px solid #333;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: #555;
+}
+td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+/* ===== Exam-taking specific ===== */
+.exam-header {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 14px 0;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+}
+
+.timer {
+  font-size: 22px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: #f0f0f0;
+}
+.timer.low-time {
+  background: #fdecea;
+  color: #d32f2f;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.badge-published { background: #e8f5e9; color: #2e7d32; }
+.badge-draft { background: #fff3e0; color: #ef6c00; }
+
+/* ===== Navbar ===== */
+.navbar {
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.navbar-links a {
+  margin-right: 16px;
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+}
+.navbar-links a:hover {
+  color: #4f46e5;
+}
+/* ===== Question builder ===== */
+.question-form {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.progress-pill {
+  display: inline-block;
+  background: #eef2ff;
+  color: #4f46e5;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.option-row.correct {
+  border-color: #4caf50;
+  background: #f1f8f2;
+}
+
+.option-row input[type="text"] {
+  border: none;
+  padding: 4px;
+  font-size: 14px;
+  background: transparent;
+}
+.option-row input[type="text"]:focus {
+  outline: none;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.icon-btn:hover {
+  background: #fdecea;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 20px 0;
+}
+
+.publish-bar {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding: 16px 0;
+  border-top: 1px solid #eee;
+}
+
+/* ===== Exam list ===== */
+.exam-meta {
+  display: flex;
+  gap: 16px;
+  color: #666;
+  font-size: 13px;
+  margin: 8px 0 12px;
+}
+
+.exam-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-note {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+.status-note.upcoming {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+.status-note.closed {
+  background: #fdecea;
+  color: #c62828;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #888;
+}
+
+/* ===== Exam taking ===== */
+.exam-progress {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 6px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: #4f46e5;
+  transition: width 0.2s;
+}
+
+.question-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.question-card.answered {
+  border-left: 4px solid #4caf50;
+}
+.question-card.unanswered {
+  border-left: 4px solid #e0e0e0;
+}
+
+.question-text {
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.points-tag {
+  font-weight: 400;
+  color: #888;
+  font-size: 13px;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.answer-option:hover {
+  background: #f8f8fc;
+}
+.answer-option.selected {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+.answer-option input {
+  cursor: pointer;
+}
+.answer-option label {
+  cursor: pointer;
+  flex: 1;
+  font-weight: 400;
+}
+
+.exam-loading, .exam-error {
+  text-align: center;
+  margin-top: 60px;
+  font-size: 15px;
+}
+
+/* ===== Results ===== */
+.score-banner {
+  background: linear-gradient(135deg, #e8f5e9, #f1f8f2);
+  border: 1px solid #c8e6c9;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.score-banner .score-value {
+  font-size: 40px;
+  font-weight: 700;
+  color: #2e7d32;
+  margin: 8px 0 0;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.score-badge {
+  font-weight: 700;
+  font-size: 15px;
+  color: #4f46e5;
+  background: #eef2ff;
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+
+/* ===== Exam results (teacher view) ===== */
+.stats-row {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0 20px;
+}
+
+.stat-box {
+  flex: 1;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.status-tag {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.status-tag.graded {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+.status-tag.in_progress {
+  background: #fff3e0;
+  color: #ef6c00;
+}

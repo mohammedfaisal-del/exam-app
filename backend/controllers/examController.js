@@ -1,0 +1,150 @@
+const { Exam, Question, Option } = require('../models');
+
+exports.createExam = async (req, res, next) => {
+  try {
+    const { title, description, durationMinutes, startTime, endTime } = req.body;
+
+    const exam = await Exam.create({
+      title,
+      description,
+      durationMinutes,
+      startTime,
+      endTime,
+      isPublished: false,
+      createdBy: req.user.id
+    });
+
+    res.status(201).json(exam);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.addQuestion = async (req, res, next) => {
+  try {
+    const { examId } = req.params;
+    const { questionText, points, options } = req.body;
+
+    const exam = await Exam.findByPk(examId);
+    if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+    if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not your exam' });
+    }
+
+    if (!options || options.length < 2) {
+      return res.status(400).json({ message: 'At least 2 options are required' });
+    }
+    if (!options.some(o => o.isCorrect)) {
+      return res.status(400).json({ message: 'At least one option must be marked correct' });
+    }
+
+    const question = await Question.create({
+      examId,
+      questionText,
+      points: points || 1
+    });
+
+    const optionRecords = options.map(opt => ({
+      questionId: question.id,
+      optionText: opt.optionText,
+      isCorrect: opt.isCorrect || false
+    }));
+    await Option.bulkCreate(optionRecords);
+
+    const fullQuestion = await Question.findByPk(question.id, { include: 'options' });
+    res.status(201).json(fullQuestion);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.publishExam = async (req, res, next) => {
+  try {
+    const { examId } = req.params;
+    const exam = await Exam.findByPk(examId);
+    if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+    if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not your exam' });
+    }
+
+    const questionCount = await Question.count({ where: { examId } });
+    if (questionCount === 0) {
+      return res.status(400).json({ message: 'Cannot publish an exam with no questions' });
+    }
+
+    exam.isPublished = true;
+    await exam.save();
+
+    res.json({ message: 'Exam published', exam });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getExamFull = async (req, res, next) => {
+  try {
+    const exam = await Exam.findByPk(req.params.examId, {
+      include: { association: 'questions', include: 'options' }
+    });
+    if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+    if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not your exam' });
+    }
+
+    res.json(exam);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getAvailableExams = async (req, res, next) => {
+  try {
+    const exams = await Exam.findAll({
+      where: { isPublished: true },
+      attributes: ['id', 'title', 'description', 'durationMinutes', 'startTime', 'endTime']
+    });
+    res.json(exams);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Teacher: list exams THEY created (with submission counts)
+exports.getMyExams = async (req, res, next) => {
+  try {
+    const exams = await Exam.findAll({
+      where: { createdBy: req.user.id },
+      include: { association: 'submissions', attributes: ['id', 'status', 'score'] }
+    });
+    res.json(exams);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Teacher/Admin: get all submissions for one of their exams
+exports.getExamResults = async (req, res, next) => {
+  try {
+    const { examId } = req.params;
+    const exam = await Exam.findByPk(examId);
+    if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+    if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not your exam' });
+    }
+
+    const { Submission } = require('../models');
+    const submissions = await Submission.findAll({
+      where: { examId },
+      include: { association: 'student', attributes: ['id', 'name', 'email'] },
+      order: [['score', 'DESC']]
+    });
+
+    res.json({ exam: { id: exam.id, title: exam.title }, submissions });
+  } catch (err) {
+    next(err);
+  }
+};
