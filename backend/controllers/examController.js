@@ -1,8 +1,68 @@
 const { Exam, Question, Option } = require('../models');
+const { processAndSaveImage } = require('../utils/imageProcessor');
+
+// exports.createExam = async (req, res, next) => {
+//   try {
+//     const { title, description, durationMinutes, startTime, endTime } = req.body;
+
+//     const exam = await Exam.create({
+//       title,
+//       description,
+//       durationMinutes,
+//       startTime,
+//       endTime,
+//       isPublished: false,
+//       createdBy: req.user.id
+//     });
+
+//     res.status(201).json(exam);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
+// exports.addQuestion = async (req, res, next) => {
+//   try {
+//     const { examId } = req.params;
+//     const { questionText, points, options } = req.body;
+
+//     const exam = await Exam.findByPk(examId);
+//     if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+//     if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+//       return res.status(403).json({ message: 'Not your exam' });
+//     }
+
+//     if (!options || options.length < 2) {
+//       return res.status(400).json({ message: 'At least 2 options are required' });
+//     }
+//     if (!options.some(o => o.isCorrect)) {
+//       return res.status(400).json({ message: 'At least one option must be marked correct' });
+//     }
+
+//     const question = await Question.create({
+//       examId,
+//       questionText,
+//       points: points || 1
+//     });
+
+//     const optionRecords = options.map(opt => ({
+//       questionId: question.id,
+//       optionText: opt.optionText,
+//       isCorrect: opt.isCorrect || false
+//     }));
+//     await Option.bulkCreate(optionRecords);
+
+//     const fullQuestion = await Question.findByPk(question.id, { include: 'options' });
+//     res.status(201).json(fullQuestion);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 exports.createExam = async (req, res, next) => {
   try {
-    const { title, description, durationMinutes, startTime, endTime } = req.body;
+    const { title, description, durationMinutes, startTime, endTime, passingPercentage } = req.body;
 
     const exam = await Exam.create({
       title,
@@ -11,7 +71,8 @@ exports.createExam = async (req, res, next) => {
       startTime,
       endTime,
       isPublished: false,
-      createdBy: req.user.id
+      createdBy: req.user.id,
+      passingPercentage: passingPercentage || 50
     });
 
     res.status(201).json(exam);
@@ -19,11 +80,11 @@ exports.createExam = async (req, res, next) => {
     next(err);
   }
 };
-
 exports.addQuestion = async (req, res, next) => {
   try {
     const { examId } = req.params;
-    const { questionText, points, options } = req.body;
+    const { questionText, points } = req.body;
+    const options = typeof req.body.options === 'string' ? JSON.parse(req.body.options) : req.body.options;
 
     const exam = await Exam.findByPk(examId);
     if (!exam) return res.status(404).json({ message: 'Exam not found' });
@@ -39,10 +100,16 @@ exports.addQuestion = async (req, res, next) => {
       return res.status(400).json({ message: 'At least one option must be marked correct' });
     }
 
+    let imageUrl = null;
+    if (req.file) {
+      imageUrl = await processAndSaveImage(req.file.buffer);
+    }
+
     const question = await Question.create({
       examId,
       questionText,
-      points: points || 1
+      points: points || 1,
+      imageUrl
     });
 
     const optionRecords = options.map(opt => ({
@@ -58,7 +125,6 @@ exports.addQuestion = async (req, res, next) => {
     next(err);
   }
 };
-
 exports.publishExam = async (req, res, next) => {
   try {
     const { examId } = req.params;
@@ -78,6 +144,23 @@ exports.publishExam = async (req, res, next) => {
     await exam.save();
 
     res.json({ message: 'Exam published', exam });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteExam = async (req, res, next) => {
+  try {
+    const { examId } = req.params;
+    const exam = await Exam.findByPk(examId);
+    if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+    if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not your exam' });
+    }
+
+    await exam.destroy(); // cascades to Questions -> Options, and Submissions -> Answers via your FK constraints
+    res.json({ message: 'Exam deleted' });
   } catch (err) {
     next(err);
   }
@@ -126,6 +209,29 @@ exports.getMyExams = async (req, res, next) => {
 };
 
 // Teacher/Admin: get all submissions for one of their exams
+// exports.getExamResults = async (req, res, next) => {
+//   try {
+//     const { examId } = req.params;
+//     const exam = await Exam.findByPk(examId);
+//     if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+//     if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+//       return res.status(403).json({ message: 'Not your exam' });
+//     }
+
+//     const { Submission } = require('../models');
+//     const submissions = await Submission.findAll({
+//       where: { examId },
+//       include: { association: 'student', attributes: ['id', 'name', 'email'] },
+//       order: [['score', 'DESC']]
+//     });
+
+//     res.json({ exam: { id: exam.id, title: exam.title }, submissions });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
 exports.getExamResults = async (req, res, next) => {
   try {
     const { examId } = req.params;
@@ -136,14 +242,21 @@ exports.getExamResults = async (req, res, next) => {
       return res.status(403).json({ message: 'Not your exam' });
     }
 
-    const { Submission } = require('../models');
+    const { Submission, Question } = require('../models');
+
+    const questions = await Question.findAll({ where: { examId }, attributes: ['points'] });
+    const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
+
     const submissions = await Submission.findAll({
       where: { examId },
       include: { association: 'student', attributes: ['id', 'name', 'email'] },
       order: [['score', 'DESC']]
     });
 
-    res.json({ exam: { id: exam.id, title: exam.title }, submissions });
+    res.json({
+      exam: { id: exam.id, title: exam.title, passingPercentage: exam.passingPercentage, totalPoints },
+      submissions
+    });
   } catch (err) {
     next(err);
   }

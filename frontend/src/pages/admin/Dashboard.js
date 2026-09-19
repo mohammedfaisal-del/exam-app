@@ -9,6 +9,7 @@ const AdminDashboard = () => {
       <Link to="/admin/users"><button style={{ padding: 10, marginRight: 10 }}>Manage Users</button></Link>
       <Link to="/admin/exams"><button style={{ padding: 10, marginRight: 10 }}>All Exams</button></Link>
       <Link to="/admin/submissions"><button style={{ padding: 10 }}>All Submissions</button></Link>
+      <Link to="/admin/create-teacher"><button style={{ padding: 10, marginRight: 10 }}>إنشاء حساب معلّم</button></Link>
       <br /><br />
       <button onClick={logout}>Logout</button>
     </div>

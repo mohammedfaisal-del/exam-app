@@ -16,29 +16,59 @@
 
 // export default StudentDashboard;
 
-////////
+////////////////////////
+// import { Link } from 'react-router-dom';
+// import { useAuth } from '../../context/AuthContext';
+
+// const StudentDashboard = () => {
+//   const { user, logout } = useAuth();
+//   return (
+//     <div className="page">
+//       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+//         <div>
+//           <h2 style={{ margin: 0 }}>Welcome, {user?.name}</h2>
+//           <p className="subtitle" style={{ margin: '4px 0 0' }}>Student Dashboard</p>
+//         </div>
+//         <button onClick={logout} className="btn btn-secondary" style={{ width: 'auto' }}>Logout</button>
+//       </div>
+
+//       <div className="btn-row">
+//         <Link to="/student/exams" className="btn btn-primary" style={{ width: 'auto' }}>
+//           Browse Exams
+//         </Link>
+//         <Link to="/student/results" className="btn btn-secondary" style={{ width: 'auto' }}>
+//           My Results
+//         </Link>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default StudentDashboard;
+
+////////////////////////////////////////////////
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const StudentDashboard = () => {
   const { user, logout } = useAuth();
   return (
-    <div className="page">
+    <div className="page" dir="rtl" style={{ textAlign: 'right' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h2 style={{ margin: 0 }}>Welcome, {user?.name}</h2>
-          <p className="subtitle" style={{ margin: '4px 0 0' }}>Student Dashboard</p>
+          <h2 style={{ margin: 0 }}>مرحباً، {user?.name}</h2>
+          <p className="subtitle" style={{ margin: '4px 0 0' }}>لوحة تحكم الطالب</p>
         </div>
-        <button onClick={logout} className="btn btn-secondary" style={{ width: 'auto' }}>Logout</button>
+        <button onClick={logout} className="btn btn-secondary" style={{ width: 'auto' }}>تسجيل الخروج</button>
       </div>
 
       <div className="btn-row">
         <Link to="/student/exams" className="btn btn-primary" style={{ width: 'auto' }}>
-          Browse Exams
+          تصفح الاختبارات
         </Link>
-        <Link to="/student/results" className="btn btn-secondary" style={{ width: 'auto' }}>
-          My Results
-        </Link>
+        {/* <Link to="/student/results" className="btn btn-secondary" style={{ width: 'auto' }}>
+          نتائجي
+        </Link> */}
       </div>
     </div>
   );

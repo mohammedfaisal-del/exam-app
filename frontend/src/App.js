@@ -1,13 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import './App.css';
+import "./App.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/student/Dashboard";
 import TeacherDashboard from "./pages/teacher/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import CreateExam from "./pages/teacher/CreateExam";
+import CreateTeacher from "./pages/admin/CreateTeacher";
 import AddQuestions from "./pages/teacher/AddQuestions";
 import ExamList from "./pages/student/ExamList";
 import TakeExam from "./pages/student/TakeExam";
@@ -136,6 +137,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AllSubmissions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/create-teacher"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <CreateTeacher />
               </ProtectedRoute>
             }
           />

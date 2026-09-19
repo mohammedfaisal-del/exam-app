@@ -1,4 +1,66 @@
-const { Exam, Question, Option, Submission, Answer } = require('../models');
+const { Exam, Question, Option, Submission, Answer } = require("../models");
+
+// exports.startExam = async (req, res, next) => {
+//   try {
+//     const { examId } = req.params;
+//     const studentId = req.user.id;
+
+//     const exam = await Exam.findByPk(examId);
+// if (!exam || !exam.isPublished) {
+//   return res.status(404).json({ message: 'Exam not available' });
+// }
+
+// const now = new Date();
+// if (now < new Date(exam.startTime)) {
+//   return res.status(400).json({ message: `Exam has not started yet. It opens at ${exam.startTime}` });
+// }
+// if (now > new Date(exam.endTime)) {
+//   return res.status(400).json({ message: 'Exam window has closed' });
+// }
+
+//     // const existing = await Submission.findOne({
+//     //   where: { examId, studentId, status: 'in_progress' }
+//     // });
+//     // if (existing) {
+//     //   return res.status(200).json({ message: 'Resuming existing attempt', submission: existing });
+//     // }
+//     const existing = await Submission.findOne({
+//   where: { examId, studentId, status: 'in_progress' }
+// });
+// if (existing) {
+//   const questions = await Question.findAll({
+//     where: { examId },
+//     include: { association: 'options', attributes: ['id', 'optionText'] },
+//     attributes: ['id', 'questionText', 'points', 'imageUrl']
+//   });
+//   return res.status(200).json({ submission: existing, questions, durationMinutes: exam.durationMinutes });
+// }
+
+//     const alreadyDone = await Submission.findOne({
+//       where: { examId, studentId, status: 'graded' }
+//     });
+//     if (alreadyDone) {
+//       return res.status(400).json({ message: 'You have already completed this exam' });
+//     }
+
+//     const submission = await Submission.create({
+//       examId,
+//       studentId,
+//       startedAt: new Date(),
+//       status: 'in_progress'
+//     });
+
+//     const questions = await Question.findAll({
+//       where: { examId },
+//       include: { association: 'options', attributes: ['id', 'optionText'] },
+//       attributes: ['id', 'questionText', 'points', 'imageUrl']
+//     });
+
+//     res.status(201).json({ submission, questions, durationMinutes: exam.durationMinutes });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 exports.startExam = async (req, res, next) => {
   try {
@@ -6,61 +68,141 @@ exports.startExam = async (req, res, next) => {
     const studentId = req.user.id;
 
     const exam = await Exam.findByPk(examId);
-if (!exam || !exam.isPublished) {
-  return res.status(404).json({ message: 'Exam not available' });
-}
-
-const now = new Date();
-if (now < new Date(exam.startTime)) {
-  return res.status(400).json({ message: `Exam has not started yet. It opens at ${exam.startTime}` });
-}
-if (now > new Date(exam.endTime)) {
-  return res.status(400).json({ message: 'Exam window has closed' });
-}
-
-    // const existing = await Submission.findOne({
-    //   where: { examId, studentId, status: 'in_progress' }
-    // });
-    // if (existing) {
-    //   return res.status(200).json({ message: 'Resuming existing attempt', submission: existing });
-    // }
-    const existing = await Submission.findOne({
-  where: { examId, studentId, status: 'in_progress' }
-});
-if (existing) {
-  const questions = await Question.findAll({
-    where: { examId },
-    include: { association: 'options', attributes: ['id', 'optionText'] },
-    attributes: ['id', 'questionText', 'points']
-  });
-  return res.status(200).json({ submission: existing, questions, durationMinutes: exam.durationMinutes });
-}
-
-    const alreadyDone = await Submission.findOne({
-      where: { examId, studentId, status: 'graded' }
-    });
-    if (alreadyDone) {
-      return res.status(400).json({ message: 'You have already completed this exam' });
+    if (!exam || !exam.isPublished) {
+      return res.status(404).json({ message: "Exam not available" });
     }
 
+    const now = new Date();
+    if (now < new Date(exam.startTime)) {
+      return res
+        .status(400)
+        .json({
+          message: `Exam has not started yet. It opens at ${exam.startTime}`,
+        });
+    }
+    if (now > new Date(exam.endTime)) {
+      return res.status(400).json({ message: "Exam window has closed" });
+    }
+
+    const questions = await Question.findAll({
+      where: { examId },
+      include: { association: "options", attributes: ["id", "optionText"] },
+      attributes: ["id", "questionText", "points", "imageUrl"],
+    });
+
+    // Check for ANY existing submission (in_progress or graded) - single source of truth
+    const existing = await Submission.findOne({ where: { examId, studentId } });
+
+    if (existing) {
+      if (existing.status === "graded") {
+        return res
+          .status(400)
+          .json({
+            message: "You have already completed this exam",
+            alreadySubmitted: true,
+            score: existing.score,
+          });
+      }
+      // in_progress - let them resume
+      return res
+        .status(200)
+        .json({
+          submission: existing,
+          questions,
+          durationMinutes: exam.durationMinutes,
+        });
+    }
+
+    // No existing submission - create one, guarded by the DB unique constraint
     const submission = await Submission.create({
       examId,
       studentId,
       startedAt: new Date(),
-      status: 'in_progress'
+      status: "in_progress",
     });
 
-    const questions = await Question.findAll({
-      where: { examId },
-      include: { association: 'options', attributes: ['id', 'optionText'] },
-      attributes: ['id', 'questionText', 'points']
-    });
-
-    res.status(201).json({ submission, questions, durationMinutes: exam.durationMinutes });
+    res
+      .status(201)
+      .json({ submission, questions, durationMinutes: exam.durationMinutes });
   } catch (err) {
+    if (err.name === "SequelizeUniqueConstraintError") {
+      // Race condition (e.g. duplicate near-simultaneous start calls) - fetch the real existing submission
+      const existing = await Submission.findOne({
+        where: { examId: req.params.examId, studentId: req.user.id },
+      });
+
+      if (!existing) {
+        return next(err); // shouldn't happen, but don't crash
+      }
+
+      if (existing.status === "graded") {
+        return res
+          .status(400)
+          .json({
+            message: "You have already completed this exam",
+            alreadySubmitted: true,
+            score: existing.score,
+          });
+      }
+
+      // Still in progress - this was just a duplicate create attempt, resume normally
+      const questions = await Question.findAll({
+        where: { examId: req.params.examId },
+        include: { association: "options", attributes: ["id", "optionText"] },
+        attributes: ["id", "questionText", "points", "imageUrl"],
+      });
+      const exam = await Exam.findByPk(req.params.examId);
+      return res
+        .status(200)
+        .json({
+          submission: existing,
+          questions,
+          durationMinutes: exam.durationMinutes,
+        });
+    }
     next(err);
   }
 };
+// exports.submitAnswer = async (req, res, next) => {
+//   try {
+//     const { submissionId } = req.params;
+//     const { questionId, selectedOptionId } = req.body;
+//     const studentId = req.user.id;
+
+//     const submission = await Submission.findByPk(submissionId);
+//     if (!submission || submission.studentId !== studentId) {
+//       return res.status(404).json({ message: "Submission not found" });
+//     }
+//     if (submission.status !== "in_progress") {
+//       return res.status(400).json({ message: "Exam already submitted" });
+//     }
+
+//     const exam = await Exam.findByPk(submission.examId);
+//     const elapsedMinutes =
+//       (Date.now() - new Date(submission.startedAt)) / 60000;
+//     const pastWindow = new Date() > new Date(exam.endTime);
+
+//     if (elapsedMinutes > exam.durationMinutes || pastWindow) {
+//       submission.status = "graded";
+//       await submission.save();
+//       return res.status(400).json({ message: "Time is up, exam auto-closed" });
+//     }
+
+//     const existingAnswer = await Answer.findOne({
+//       where: { submissionId, questionId },
+//     });
+//     if (existingAnswer) {
+//       existingAnswer.selectedOptionId = selectedOptionId;
+//       await existingAnswer.save();
+//     } else {
+//       await Answer.create({ submissionId, questionId, selectedOptionId });
+//     }
+
+//     res.json({ message: "Answer saved" });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 exports.submitAnswer = async (req, res, next) => {
   try {
@@ -76,29 +218,66 @@ exports.submitAnswer = async (req, res, next) => {
       return res.status(400).json({ message: 'Exam already submitted' });
     }
 
-   const exam = await Exam.findByPk(submission.examId);
-const elapsedMinutes = (Date.now() - new Date(submission.startedAt)) / 60000;
-const pastWindow = new Date() > new Date(exam.endTime);
+    const exam = await Exam.findByPk(submission.examId);
+    const elapsedMinutes = (Date.now() - new Date(submission.startedAt)) / 60000;
+    const pastWindow = new Date() > new Date(exam.endTime);
 
-if (elapsedMinutes > exam.durationMinutes || pastWindow) {
+   if (elapsedMinutes > exam.durationMinutes || pastWindow) {
+  submission.score = 0;
   submission.status = 'graded';
+  submission.submittedAt = new Date();
   await submission.save();
-  return res.status(400).json({ message: 'Time is up, exam auto-closed' });
+  return res.status(400).json({ message: 'Time is up, exam auto-closed', score: 0 });
 }
 
-    const existingAnswer = await Answer.findOne({ where: { submissionId, questionId } });
-    if (existingAnswer) {
-      existingAnswer.selectedOptionId = selectedOptionId;
-      await existingAnswer.save();
-    } else {
-      await Answer.create({ submissionId, questionId, selectedOptionId });
-    }
+    // Atomic upsert - single query, no race condition window
+    await Answer.upsert({
+      submissionId,
+      questionId,
+      selectedOptionId
+    }, {
+      conflictFields: ['submissionId', 'questionId']
+    });
 
     res.json({ message: 'Answer saved' });
   } catch (err) {
     next(err);
   }
 };
+// exports.finishExam = async (req, res, next) => {
+//   try {
+//     const { submissionId } = req.params;
+//     const studentId = req.user.id;
+
+//     const submission = await Submission.findByPk(submissionId, {
+//       include: { association: "answers" },
+//     });
+//     if (!submission || submission.studentId !== studentId) {
+//       return res.status(404).json({ message: "Submission not found" });
+//     }
+//     if (submission.status !== "in_progress") {
+//       return res.status(400).json({ message: "Exam already submitted" });
+//     }
+
+//     let totalScore = 0;
+//     for (const answer of submission.answers) {
+//       const question = await Question.findByPk(answer.questionId);
+//       const option = await Option.findByPk(answer.selectedOptionId);
+//       if (option && option.isCorrect) {
+//         totalScore += question.points;
+//       }
+//     }
+
+//     submission.score = totalScore;
+//     submission.status = "graded";
+//     submission.submittedAt = new Date();
+//     await submission.save();
+
+//     res.json({ message: "Exam submitted", score: totalScore });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 exports.finishExam = async (req, res, next) => {
   try {
@@ -115,21 +294,33 @@ exports.finishExam = async (req, res, next) => {
       return res.status(400).json({ message: 'Exam already submitted' });
     }
 
+    const exam = await Exam.findByPk(submission.examId);
+    const elapsedMinutes = (Date.now() - new Date(submission.startedAt)) / 60000;
+    const isLate = elapsedMinutes > exam.durationMinutes || new Date() > new Date(exam.endTime);
+
     let totalScore = 0;
-    for (const answer of submission.answers) {
-      const question = await Question.findByPk(answer.questionId);
-      const option = await Option.findByPk(answer.selectedOptionId);
-      if (option && option.isCorrect) {
-        totalScore += question.points;
+
+    if (!isLate) {
+      for (const answer of submission.answers) {
+        const question = await Question.findByPk(answer.questionId);
+        const option = await Option.findByPk(answer.selectedOptionId);
+        if (option && option.isCorrect) {
+          totalScore += question.points;
+        }
       }
     }
+    // if isLate, totalScore stays 0 - submitted past the allowed time
 
     submission.score = totalScore;
     submission.status = 'graded';
     submission.submittedAt = new Date();
     await submission.save();
 
-    res.json({ message: 'Exam submitted', score: totalScore });
+    res.json({
+      message: isLate ? 'Submitted late - scored 0' : 'Exam submitted',
+      score: totalScore,
+      late: isLate
+    });
   } catch (err) {
     next(err);
   }
@@ -139,8 +330,8 @@ exports.getMyResults = async (req, res, next) => {
   try {
     const studentId = req.user.id;
     const submissions = await Submission.findAll({
-      where: { studentId, status: 'graded' },
-      include: { association: 'exam', attributes: ['title'] }
+      where: { studentId, status: "graded" },
+      include: { association: "exam", attributes: ["title"] },
     });
     res.json(submissions);
   } catch (err) {

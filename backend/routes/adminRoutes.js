@@ -6,7 +6,8 @@ const {
   deleteUser,
   updateUserRole,
   getAllExams,
-  getAllSubmissions
+  getAllSubmissions,
+  createTeacher
 } = require('../controllers/adminController');
 
 router.use(verifyToken, requireRole('admin'));
@@ -16,5 +17,6 @@ router.delete('/users/:userId', deleteUser);
 router.patch('/users/:userId/role', updateUserRole);
 router.get('/exams', getAllExams);
 router.get('/submissions', getAllSubmissions);
+router.post('/teachers', createTeacher);
 
 module.exports = router;

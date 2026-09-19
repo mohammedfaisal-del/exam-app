@@ -22,7 +22,8 @@ module.exports = (sequelize, DataTypes) => {
     startTime: DataTypes.DATE,
     endTime: DataTypes.DATE,
     isPublished: DataTypes.BOOLEAN,
-    createdBy: DataTypes.INTEGER
+    createdBy: DataTypes.INTEGER,
+    passingPercentage: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Exam',

@@ -69,20 +69,179 @@
 // export default CreateExam;
 
 ////////////////////////////
+////////////////////////////////////////////////////////////
+// import { useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import api from '../../api/axios';
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
+// const CreateExam = () => {
+//   const [form, setForm] = useState({
+//     title: '',
+//     description: '',
+//     durationMinutes: 30,
+//     startTime: '',
+//     endTime: ''
+//   });
+//   const [error, setError] = useState('');
+//   const [loading, setLoading] = useState(false);
+//   const navigate = useNavigate();
+
+//   const handleChange = (e) => {
+//     setForm({ ...form, [e.target.name]: e.target.value });
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setError('');
+//     setLoading(true);
+//     try {
+//       const res = await api.post('/exams', form);
+//       navigate(`/teacher/exams/${res.data.id}/questions`);
+//     } catch (err) {
+//       setError(err.response?.data?.message || 'Failed to create exam');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="page-narrow">
+//       <div className="card">
+//         <h2>Create Exam</h2>
+//         {error && <div className="alert alert-error">{error}</div>}
+//         <form onSubmit={handleSubmit}>
+//           <div className="form-group">
+//             <label>Title</label>
+//             <input name="title" value={form.title} onChange={handleChange} required />
+//           </div>
+//           <div className="form-group">
+//             <label>Description</label>
+//             <textarea name="description" value={form.description} onChange={handleChange} rows={3} />
+//           </div>
+//           <div className="form-group">
+//             <label>Duration (minutes)</label>
+//             <input type="number" name="durationMinutes" min="1" value={form.durationMinutes} onChange={handleChange} required />
+//           </div>
+//           <div className="form-group">
+//             <label>Start Time</label>
+//             <input type="datetime-local" name="startTime" value={form.startTime} onChange={handleChange} required />
+//           </div>
+//           <div className="form-group">
+//             <label>End Time</label>
+//             <input type="datetime-local" name="endTime" value={form.endTime} onChange={handleChange} required />
+//           </div>
+//           <button type="submit" disabled={loading} className="btn btn-primary">
+//             {loading ? 'Creating...' : 'Create Exam & Add Questions'}
+//           </button>
+//         </form>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default CreateExam;
+
+/////////////////////////////////////////////////////////
+// import { useState } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import api from '../../api/axios';
+
+// const CreateExam = () => {
+//   const [form, setForm] = useState({
+//     title: '',
+//     description: '',
+//     durationMinutes: 30,
+//     startTime: '',
+//     endTime: ''
+//   });
+//   const [error, setError] = useState('');
+//   const [loading, setLoading] = useState(false);
+//   const navigate = useNavigate();
+
+//   const handleChange = (e) => {
+//     setForm({ ...form, [e.target.name]: e.target.value });
+//   };
+
+//   // Converts a datetime-local string (interpreted as the BROWSER's local time)
+//   // into a proper UTC ISO timestamp, so the server stores the correct absolute moment
+//   // regardless of what timezone the server itself runs in.
+//   const toUTCISOString = (localDateTimeStr) => {
+//     if (!localDateTimeStr) return null;
+//     return new Date(localDateTimeStr).toISOString();
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setError('');
+//     setLoading(true);
+//     try {
+//       const payload = {
+//         ...form,
+//         startTime: toUTCISOString(form.startTime),
+//         endTime: toUTCISOString(form.endTime)
+//       };
+//       const res = await api.post('/exams', payload);
+//       navigate(`/teacher/exams/${res.data.id}/questions`);
+//     } catch (err) {
+//       setError(err.response?.data?.message || 'Failed to create exam');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="page-narrow">
+//       <div className="card">
+//         <h2>Create Exam</h2>
+//         {error && <div className="alert alert-error">{error}</div>}
+//         <form onSubmit={handleSubmit}>
+//           <div className="form-group">
+//             <label>Title</label>
+//             <input name="title" value={form.title} onChange={handleChange} required />
+//           </div>
+//           <div className="form-group">
+//             <label>Description</label>
+//             <textarea name="description" value={form.description} onChange={handleChange} rows={3} />
+//           </div>
+//           <div className="form-group">
+//             <label>Duration (minutes)</label>
+//             <input type="number" name="durationMinutes" min="1" value={form.durationMinutes} onChange={handleChange} required />
+//           </div>
+//           <div className="form-group">
+//             <label>Start Time</label>
+//             <input type="datetime-local" name="startTime" value={form.startTime} onChange={handleChange} required />
+//           </div>
+//           <div className="form-group">
+//             <label>End Time</label>
+//             <input type="datetime-local" name="endTime" value={form.endTime} onChange={handleChange} required />
+//           </div>
+//           <button type="submit" disabled={loading} className="btn btn-primary">
+//             {loading ? 'Creating...' : 'Create Exam & Add Questions'}
+//           </button>
+//         </form>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default CreateExam;
+
+//////////////////////////////////////////////////////////////
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../../api/axios";
 
 const CreateExam = () => {
   const [form, setForm] = useState({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
     durationMinutes: 30,
-    startTime: '',
-    endTime: ''
+    startTime: "",
+    endTime: "",
+    passingPercentage: 50,
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -90,48 +249,102 @@ const CreateExam = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Converts a datetime-local string (interpreted as the BROWSER's local time)
+  // into a proper UTC ISO timestamp, so the server stores the correct absolute moment
+  // regardless of what timezone the server itself runs in.
+  const toUTCISOString = (localDateTimeStr) => {
+    if (!localDateTimeStr) return null;
+    return new Date(localDateTimeStr).toISOString();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
     try {
-      const res = await api.post('/exams', form);
+      const payload = {
+        ...form,
+        startTime: toUTCISOString(form.startTime),
+        endTime: toUTCISOString(form.endTime),
+      };
+      const res = await api.post("/exams", payload);
       navigate(`/teacher/exams/${res.data.id}/questions`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create exam');
+      setError(err.response?.data?.message || "فشل إنشاء الاختبار");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page-narrow">
+    <div className="page-narrow" dir="rtl" style={{ textAlign: "right" }}>
       <div className="card">
-        <h2>Create Exam</h2>
+        <h2>إنشاء اختبار جديد</h2>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Title</label>
-            <input name="title" value={form.title} onChange={handleChange} required />
+            <label>عنوان الاختبار</label>
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className="form-group">
-            <label>Description</label>
-            <textarea name="description" value={form.description} onChange={handleChange} rows={3} />
+            <label>الوصف</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              rows={3}
+            />
           </div>
           <div className="form-group">
-            <label>Duration (minutes)</label>
-            <input type="number" name="durationMinutes" min="1" value={form.durationMinutes} onChange={handleChange} required />
+            <label>المدة (بالدقائق)</label>
+            <input
+              type="number"
+              name="durationMinutes"
+              min="1"
+              value={form.durationMinutes}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className="form-group">
-            <label>Start Time</label>
-            <input type="datetime-local" name="startTime" value={form.startTime} onChange={handleChange} required />
+            <label>وقت البدء</label>
+            <input
+              type="datetime-local"
+              name="startTime"
+              value={form.startTime}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className="form-group">
-            <label>End Time</label>
-            <input type="datetime-local" name="endTime" value={form.endTime} onChange={handleChange} required />
+            <label>وقت الانتهاء</label>
+            <input
+              type="datetime-local"
+              name="endTime"
+              value={form.endTime}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>نسبة النجاح المطلوبة (%)</label>
+            <input
+              type="number"
+              name="passingPercentage"
+              min="1"
+              max="100"
+              value={form.passingPercentage}
+              onChange={handleChange}
+              required
+            />
           </div>
           <button type="submit" disabled={loading} className="btn btn-primary">
-            {loading ? 'Creating...' : 'Create Exam & Add Questions'}
+            {loading ? "جاري الإنشاء..." : "إنشاء الاختبار وإضافة الأسئلة"}
           </button>
         </form>
       </div>

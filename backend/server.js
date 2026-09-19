@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const path = require('path');
 const rateLimit = require('express-rate-limit');
 const { sequelize } = require('./models');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
@@ -16,11 +17,17 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Rate limit auth endpoints specifically (brute-force protection)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20,
+  // max: 20,
+  max: 5000,
   message: { message: 'Too many attempts, please try again later' }
 });
 app.use('/api/auth', authLimiter);
