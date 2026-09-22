@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
-import "./App.css";
+// import "./App.css";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import StudentDashboard from "./pages/student/Dashboard";
@@ -17,6 +17,7 @@ import MyExams from "./pages/teacher/MyExams";
 import ExamResults from "./pages/teacher/ExamResults";
 import ManageUsers from "./pages/admin/ManageUsers";
 import AllExams from "./pages/admin/AllExams";
+import EditExam from "./pages/teacher/EditExam";
 import AllSubmissions from "./pages/admin/AllSubmissions";
 const HomeRedirect = () => {
   const { user } = useAuth();
@@ -97,6 +98,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["teacher", "admin"]}>
                 <MyExams />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/exams/:examId/edit"
+            element={
+              <ProtectedRoute allowedRoles={["teacher", "admin"]}>
+                <EditExam />
               </ProtectedRoute>
             }
           />

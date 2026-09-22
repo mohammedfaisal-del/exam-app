@@ -1,5 +1,5 @@
 const { Exam, Question, Option } = require('../models');
-const { processAndSaveImage } = require('../utils/imageProcessor');
+const { processAndSaveImage , deleteImage } = require('../utils/imageProcessor');
 
 // exports.createExam = async (req, res, next) => {
 //   try {
@@ -149,6 +149,23 @@ exports.publishExam = async (req, res, next) => {
   }
 };
 
+// exports.deleteExam = async (req, res, next) => {
+//   try {
+//     const { examId } = req.params;
+//     const exam = await Exam.findByPk(examId);
+//     if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+//     if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+//       return res.status(403).json({ message: 'Not your exam' });
+//     }
+
+//     await exam.destroy(); // cascades to Questions -> Options, and Submissions -> Answers via your FK constraints
+//     res.json({ message: 'Exam deleted' });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
 exports.deleteExam = async (req, res, next) => {
   try {
     const { examId } = req.params;
@@ -159,8 +176,58 @@ exports.deleteExam = async (req, res, next) => {
       return res.status(403).json({ message: 'Not your exam' });
     }
 
-    await exam.destroy(); // cascades to Questions -> Options, and Submissions -> Answers via your FK constraints
+    // Clean up any question images before deleting the exam
+    const questions = await Question.findAll({ where: { examId }, attributes: ['imageUrl'] });
+    questions.forEach(q => deleteImage(q.imageUrl));
+
+    await exam.destroy(); // cascades to Questions -> Options, and Submissions -> Answers via FK constraints
     res.json({ message: 'Exam deleted' });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateExam = async (req, res, next) => {
+  try {
+    const { examId } = req.params;
+    const { title, description, durationMinutes, startTime, endTime, passingPercentage } = req.body;
+
+    const exam = await Exam.findByPk(examId);
+    if (!exam) return res.status(404).json({ message: 'Exam not found' });
+
+    if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not your exam' });
+    }
+
+    if (title !== undefined) exam.title = title;
+    if (description !== undefined) exam.description = description;
+    if (durationMinutes !== undefined) exam.durationMinutes = durationMinutes;
+    if (startTime !== undefined) exam.startTime = startTime;
+    if (endTime !== undefined) exam.endTime = endTime;
+    if (passingPercentage !== undefined) exam.passingPercentage = passingPercentage;
+
+    await exam.save();
+    res.json(exam);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteQuestion = async (req, res, next) => {
+  try {
+    const { questionId } = req.params;
+    const question = await Question.findByPk(questionId);
+    if (!question) return res.status(404).json({ message: 'Question not found' });
+
+    const exam = await Exam.findByPk(question.examId);
+    if (exam.createdBy !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not your exam' });
+    }
+
+    deleteImage(question.imageUrl);
+    await question.destroy(); // cascades to Options via FK constraint
+
+    res.json({ message: 'Question deleted' });
   } catch (err) {
     next(err);
   }

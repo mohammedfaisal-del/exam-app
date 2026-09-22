@@ -20,4 +20,17 @@ async function processAndSaveImage(buffer) {
   return `/uploads/questions/${filename}`;
 }
 
-module.exports = { processAndSaveImage };
+function deleteImage(imageUrl) {
+  if (!imageUrl) return;
+  try {
+    const filename = path.basename(imageUrl);
+    const filePath = path.join(UPLOAD_DIR, filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch (err) {
+    console.error('Failed to delete image file:', err.message);
+  }
+}
+
+module.exports = { processAndSaveImage , deleteImage };

@@ -479,6 +479,283 @@
 
 //////////////////////////////////////////////////
 
+// import { useState, useEffect, useRef } from "react";
+// import { useParams, Link } from "react-router-dom";
+// import html2pdf from "html2pdf.js";
+// import api from "../../api/axios";
+
+// const statusLabels = {
+//   graded: "مكتمل",
+//   in_progress: "قيد التنفيذ",
+// };
+
+// const ExamResults = () => {
+//   const { examId } = useParams();
+//   const [data, setData] = useState(null);
+//   const [error, setError] = useState("");
+//   const [exporting, setExporting] = useState(false);
+//   const printRef = useRef(null);
+
+//   useEffect(() => {
+//     api
+//       .get(`/exams/${examId}/results`)
+//       .then((res) => setData(res.data))
+//       .catch((err) =>
+//         setError(err.response?.data?.message || "فشل تحميل النتائج"),
+//       );
+//   }, [examId]);
+
+//   const handleExportPDF = () => {
+//     if (!printRef.current || !data) return;
+//     setExporting(true);
+
+//     const opt = {
+//       margin: 10,
+//       filename: `نتائج-${data.exam.title}.pdf`,
+//       image: { type: "jpeg", quality: 0.98 },
+//       html2canvas: { scale: 2, useCORS: true },
+//       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+//     };
+
+//     html2pdf()
+//       .set(opt)
+//       .from(printRef.current)
+//       .save()
+//       .finally(() => setExporting(false));
+//   };
+
+//   if (error)
+//     return (
+//       <div className="page" dir="rtl" style={{ textAlign: "right" }}>
+//         <div className="alert alert-error">{error}</div>
+//       </div>
+//     );
+//   if (!data)
+//     return (
+//       <p style={{ textAlign: "center", marginTop: 40 }}>جاري التحميل...</p>
+//     );
+
+//   const graded = data.submissions.filter((s) => s.status === "graded");
+//   const inProgress = data.submissions.filter((s) => s.status === "in_progress");
+//   const avgScore = graded.length
+//     ? (graded.reduce((sum, s) => sum + s.score, 0) / graded.length).toFixed(1)
+//     : 0;
+
+//   const totalPoints = data.exam.totalPoints || 0;
+//   const passingPercentage = data.exam.passingPercentage || 50;
+
+//   const getPassFail = (sub) => {
+//     if (sub.status !== "graded" || !totalPoints) return null;
+//     const percentage = (sub.score / totalPoints) * 100;
+//     return percentage >= passingPercentage;
+//   };
+
+//   return (
+//     <div className="page" dir="rtl" style={{ textAlign: "right" }}>
+//       <div
+//         style={{
+//           display: "flex",
+//           justifyContent: "space-between",
+//           alignItems: "center",
+//           flexWrap: "wrap",
+//           gap: 10,
+//         }}
+//       >
+//         <h2 style={{ margin: 0 }}>نتائج: {data.exam.title}</h2>
+//         <button
+//           onClick={handleExportPDF}
+//           disabled={exporting}
+//           className="btn btn-secondary"
+//           style={{ width: "auto" }}
+//         >
+//           {exporting ? "جاري التصدير..." : "تصدير كملف PDF"}
+//         </button>
+//       </div>
+
+//       <p className="subtitle">
+//         الدرجة الكلية: {totalPoints} | نسبة النجاح المطلوبة: {passingPercentage}
+//         %
+//       </p>
+
+//       <div className="stats-row">
+//         <div className="stat-box">
+//           <div className="stat-value">{graded.length}</div>
+//           <div className="stat-label">مكتمل</div>
+//         </div>
+//         <div className="stat-box">
+//           <div className="stat-value">{inProgress.length}</div>
+//           <div className="stat-label">قيد التنفيذ</div>
+//         </div>
+//         <div className="stat-box">
+//           <div className="stat-value">{avgScore}</div>
+//           <div className="stat-label">متوسط الدرجات</div>
+//         </div>
+//       </div>
+
+//       <div className="card">
+//         <table>
+//           <thead>
+//             <tr>
+//               <th>الطالب</th>
+//               <th>البريد الإلكتروني</th>
+//               <th>الدرجة</th>
+//               <th>النتيجة</th>
+//               <th>الحالة</th>
+//             </tr>
+//           </thead>
+//           <tbody>
+//             {data.submissions.map((sub) => {
+//               const passed = getPassFail(sub);
+//               return (
+//                 <tr key={sub.id}>
+//                   <td>{sub.student?.name}</td>
+//                   <td>{sub.student?.email}</td>
+//                   <td>
+//                     {sub.status === "graded"
+//                       ? `${sub.score} / ${totalPoints}`
+//                       : "—"}
+//                   </td>
+//                   <td>
+//                     {passed === null ? (
+//                       "—"
+//                     ) : (
+//                       <span
+//                         className={`badge ${passed ? "badge-published" : "badge-draft"}`}
+//                       >
+//                         {passed ? "ناجح" : "راسب"}
+//                       </span>
+//                     )}
+//                   </td>
+//                   <td>
+//                     <span className={`status-tag ${sub.status}`}>
+//                       {statusLabels[sub.status] || sub.status}
+//                     </span>
+//                   </td>
+//                 </tr>
+//               );
+//             })}
+//           </tbody>
+//         </table>
+//       </div>
+
+//       {/* <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
+//         <div ref={printRef} style={{ backgroundColor: 'white', padding: 10, width: 600 }}>
+//           <h3 style={{ marginBottom: 12, textAlign: 'right' }}>نتائج: {data.exam.title}</h3>
+//           <table style={{ width: '100%', borderCollapse: 'collapse', direction: 'rtl' }}>
+//             <thead>
+//               <tr>
+//                 <th style={{ border: '1px solid #ccc', padding: 8, textAlign: 'right' }}>الطالب</th>
+//                 <th style={{ border: '1px solid #ccc', padding: 8, textAlign: 'right' }}>البريد الإلكتروني</th>
+//                 <th style={{ border: '1px solid #ccc', padding: 8, textAlign: 'right' }}>الدرجة</th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {data.submissions.map(sub => (
+//                 <tr key={sub.id}>
+//                   <td style={{ border: '1px solid #ccc', padding: 8 }}>{sub.student?.name}</td>
+//                   <td style={{ border: '1px solid #ccc', padding: 8 }}>{sub.student?.email}</td>
+//                   <td style={{ border: '1px solid #ccc', padding: 8 }}>{sub.status === 'graded' ? sub.score : '—'}</td>
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div> */}
+//       <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
+//         <div
+//           ref={printRef}
+//           style={{ backgroundColor: "white", padding: 10, width: 600 }}
+//         >
+//           <h3 style={{ marginBottom: 12, textAlign: "right" }}>
+//             نتائج: {data.exam.title}
+//           </h3>
+//           <table
+//             style={{
+//               width: "100%",
+//               borderCollapse: "collapse",
+//               direction: "rtl",
+//             }}
+//           >
+//             <thead>
+//               <tr>
+//                 <th
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: 8,
+//                     textAlign: "right",
+//                   }}
+//                 >
+//                   الطالب
+//                 </th>
+//                 <th
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: 8,
+//                     textAlign: "right",
+//                   }}
+//                 >
+//                   البريد الإلكتروني
+//                 </th>
+//                 <th
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: 8,
+//                     textAlign: "right",
+//                   }}
+//                 >
+//                   الدرجة
+//                 </th>
+//                 <th
+//                   style={{
+//                     border: "1px solid #ccc",
+//                     padding: 8,
+//                     textAlign: "right",
+//                   }}
+//                 >
+//                   النتيجة
+//                 </th>
+//               </tr>
+//             </thead>
+//             <tbody>
+//               {data.submissions.map((sub) => {
+//                 const passed = getPassFail(sub);
+//                 return (
+//                   <tr key={sub.id}>
+//                     <td style={{ border: "1px solid #ccc", padding: 8 }}>
+//                       {sub.student?.name}
+//                     </td>
+//                     <td style={{ border: "1px solid #ccc", padding: 8 }}>
+//                       {sub.student?.email}
+//                     </td>
+//                     <td style={{ border: "1px solid #ccc", padding: 8 }}>
+//                       {sub.status === "graded" ? sub.score : "—"}
+//                     </td>
+//                     <td style={{ border: "1px solid #ccc", padding: 8 }}>
+//                       {passed === null ? "—" : passed ? "ناجح" : "راسب"}
+//                     </td>
+//                   </tr>
+//                 );
+//               })}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+
+//       <Link
+//         to="/teacher/exams"
+//         className="btn btn-secondary"
+//         style={{ width: "auto", display: "inline-block", marginTop: 16 }}
+//       >
+//         الرجوع إلى اختباراتي
+//       </Link>
+//     </div>
+//   );
+// };
+
+// export default ExamResults;
+
+///////////////////////////////////////////////////////////////////
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import html2pdf from "html2pdf.js";
@@ -524,16 +801,23 @@ const ExamResults = () => {
       .finally(() => setExporting(false));
   };
 
-  if (error)
+  if (error) {
     return (
-      <div className="page" dir="rtl" style={{ textAlign: "right" }}>
-        <div className="alert alert-error">{error}</div>
+      <div dir="rtl" className="min-h-screen bg-slate-50 px-4 py-12">
+        <div className="max-w-md mx-auto bg-red-50 text-red-700 text-sm rounded-lg px-4 py-3 border border-red-100">
+          {error}
+        </div>
       </div>
     );
-  if (!data)
+  }
+
+  if (!data) {
     return (
-      <p style={{ textAlign: "center", marginTop: 40 }}>جاري التحميل...</p>
+      <div dir="rtl" className="min-h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-sm text-slate-500">جاري التحميل...</p>
+      </div>
     );
+  }
 
   const graded = data.submissions.filter((s) => s.status === "graded");
   const inProgress = data.submissions.filter((s) => s.status === "in_progress");
@@ -551,187 +835,85 @@ const ExamResults = () => {
   };
 
   return (
-    <div className="page" dir="rtl" style={{ textAlign: "right" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 10,
-        }}
-      >
-        <h2 style={{ margin: 0 }}>نتائج: {data.exam.title}</h2>
-        <button
-          onClick={handleExportPDF}
-          disabled={exporting}
-          className="btn btn-secondary"
-          style={{ width: "auto" }}
-        >
-          {exporting ? "جاري التصدير..." : "تصدير كملف PDF"}
-        </button>
-      </div>
-
-      <p className="subtitle">
-        الدرجة الكلية: {totalPoints} | نسبة النجاح المطلوبة: {passingPercentage}
-        %
-      </p>
-
-      <div className="stats-row">
-        <div className="stat-box">
-          <div className="stat-value">{graded.length}</div>
-          <div className="stat-label">مكتمل</div>
-        </div>
-        <div className="stat-box">
-          <div className="stat-value">{inProgress.length}</div>
-          <div className="stat-label">قيد التنفيذ</div>
-        </div>
-        <div className="stat-box">
-          <div className="stat-value">{avgScore}</div>
-          <div className="stat-label">متوسط الدرجات</div>
-        </div>
-      </div>
-
-      <div className="card">
-        <table>
-          <thead>
-            <tr>
-              <th>الطالب</th>
-              <th>البريد الإلكتروني</th>
-              <th>الدرجة</th>
-              <th>النتيجة</th>
-              <th>الحالة</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.submissions.map((sub) => {
-              const passed = getPassFail(sub);
-              return (
-                <tr key={sub.id}>
-                  <td>{sub.student?.name}</td>
-                  <td>{sub.student?.email}</td>
-                  <td>
-                    {sub.status === "graded"
-                      ? `${sub.score} / ${totalPoints}`
-                      : "—"}
-                  </td>
-                  <td>
-                    {passed === null ? (
-                      "—"
-                    ) : (
-                      <span
-                        className={`badge ${passed ? "badge-published" : "badge-draft"}`}
-                      >
-                        {passed ? "ناجح" : "راسب"}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    <span className={`status-tag ${sub.status}`}>
-                      {statusLabels[sub.status] || sub.status}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-        <div ref={printRef} style={{ backgroundColor: 'white', padding: 10, width: 600 }}>
-          <h3 style={{ marginBottom: 12, textAlign: 'right' }}>نتائج: {data.exam.title}</h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse', direction: 'rtl' }}>
-            <thead>
-              <tr>
-                <th style={{ border: '1px solid #ccc', padding: 8, textAlign: 'right' }}>الطالب</th>
-                <th style={{ border: '1px solid #ccc', padding: 8, textAlign: 'right' }}>البريد الإلكتروني</th>
-                <th style={{ border: '1px solid #ccc', padding: 8, textAlign: 'right' }}>الدرجة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.submissions.map(sub => (
-                <tr key={sub.id}>
-                  <td style={{ border: '1px solid #ccc', padding: 8 }}>{sub.student?.name}</td>
-                  <td style={{ border: '1px solid #ccc', padding: 8 }}>{sub.student?.email}</td>
-                  <td style={{ border: '1px solid #ccc', padding: 8 }}>{sub.status === 'graded' ? sub.score : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div> */}
-      <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
-        <div
-          ref={printRef}
-          style={{ backgroundColor: "white", padding: 10, width: 600 }}
-        >
-          <h3 style={{ marginBottom: 12, textAlign: "right" }}>
+    <div dir="rtl" className="min-h-screen bg-slate-50">
+      <div className="max-w-4xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
             نتائج: {data.exam.title}
-          </h3>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              direction: "rtl",
-            }}
+          </h2>
+          <button
+            onClick={handleExportPDF}
+            disabled={exporting}
+            className="self-start sm:self-auto bg-white border border-slate-300 text-slate-700 text-sm font-medium rounded-lg px-4 py-2 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
+            {exporting ? "جاري التصدير..." : "تصدير كملف PDF"}
+          </button>
+        </div>
+
+        <p className="text-sm text-slate-500 mb-6">
+          الدرجة الكلية: {totalPoints} | نسبة النجاح المطلوبة: {passingPercentage}%
+        </p>
+
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900">{graded.length}</div>
+            <div className="text-xs text-slate-500 mt-1">مكتمل</div>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900">{inProgress.length}</div>
+            <div className="text-xs text-slate-500 mt-1">قيد التنفيذ</div>
+          </div>
+          <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-slate-900">{avgScore}</div>
+            <div className="text-xs text-slate-500 mt-1">متوسط الدرجات</div>
+          </div>
+        </div>
+
+        {/* Table view on larger screens */}
+        <div className="hidden sm:block bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <table className="w-full text-sm">
             <thead>
-              <tr>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: 8,
-                    textAlign: "right",
-                  }}
-                >
-                  الطالب
-                </th>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: 8,
-                    textAlign: "right",
-                  }}
-                >
-                  البريد الإلكتروني
-                </th>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: 8,
-                    textAlign: "right",
-                  }}
-                >
-                  الدرجة
-                </th>
-                <th
-                  style={{
-                    border: "1px solid #ccc",
-                    padding: 8,
-                    textAlign: "right",
-                  }}
-                >
-                  النتيجة
-                </th>
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs uppercase">
+                <th className="px-4 py-3 text-right font-semibold">الطالب</th>
+                <th className="px-4 py-3 text-right font-semibold">البريد الإلكتروني</th>
+                <th className="px-4 py-3 text-right font-semibold">الدرجة</th>
+                <th className="px-4 py-3 text-right font-semibold">النتيجة</th>
+                <th className="px-4 py-3 text-right font-semibold">الحالة</th>
               </tr>
             </thead>
             <tbody>
               {data.submissions.map((sub) => {
                 const passed = getPassFail(sub);
                 return (
-                  <tr key={sub.id}>
-                    <td style={{ border: "1px solid #ccc", padding: 8 }}>
-                      {sub.student?.name}
+                  <tr key={sub.id} className="border-b border-slate-100 last:border-0">
+                    <td className="px-4 py-3 text-slate-900 font-medium">{sub.student?.name}</td>
+                    <td className="px-4 py-3 text-slate-500">{sub.student?.email}</td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {sub.status === "graded" ? `${sub.score} / ${totalPoints}` : "—"}
                     </td>
-                    <td style={{ border: "1px solid #ccc", padding: 8 }}>
-                      {sub.student?.email}
+                    <td className="px-4 py-3">
+                      {passed === null ? (
+                        "—"
+                      ) : (
+                        <span
+                          className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${
+                            passed ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                          }`}
+                        >
+                          {passed ? "ناجح" : "راسب"}
+                        </span>
+                      )}
                     </td>
-                    <td style={{ border: "1px solid #ccc", padding: 8 }}>
-                      {sub.status === "graded" ? sub.score : "—"}
-                    </td>
-                    <td style={{ border: "1px solid #ccc", padding: 8 }}>
-                      {passed === null ? "—" : passed ? "ناجح" : "راسب"}
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${
+                          sub.status === "graded"
+                            ? "bg-green-50 text-green-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {statusLabels[sub.status] || sub.status}
+                      </span>
                     </td>
                   </tr>
                 );
@@ -739,15 +921,86 @@ const ExamResults = () => {
             </tbody>
           </table>
         </div>
-      </div>
 
-      <Link
-        to="/teacher/exams"
-        className="btn btn-secondary"
-        style={{ width: "auto", display: "inline-block", marginTop: 16 }}
-      >
-        الرجوع إلى اختباراتي
-      </Link>
+        {/* Card view on small screens */}
+        <div className="sm:hidden space-y-3">
+          {data.submissions.map((sub) => {
+            const passed = getPassFail(sub);
+            return (
+              <div key={sub.id} className="bg-white rounded-xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold text-slate-900">{sub.student?.name}</p>
+                  <span
+                    className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                      sub.status === "graded"
+                        ? "bg-green-50 text-green-700"
+                        : "bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    {statusLabels[sub.status] || sub.status}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-500 mt-1">{sub.student?.email}</p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-sm text-slate-700">
+                    الدرجة: {sub.status === "graded" ? `${sub.score} / ${totalPoints}` : "—"}
+                  </p>
+                  {passed !== null && (
+                    <span
+                      className={`text-xs font-semibold px-3 py-1 rounded-full ${
+                        passed ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+                      }`}
+                    >
+                      {passed ? "ناجح" : "راسب"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Hidden simplified table used ONLY for PDF export - name, email, grade, pass/fail */}
+        <div style={{ position: "absolute", left: "-9999px", top: 0 }}>
+          <div ref={printRef} style={{ backgroundColor: "white", padding: 10, width: 600 }}>
+            <h3 style={{ marginBottom: 12, textAlign: "right" }}>نتائج: {data.exam.title}</h3>
+            <table style={{ width: "100%", borderCollapse: "collapse", direction: "rtl" }}>
+              <thead>
+                <tr>
+                  <th style={{ border: "1px solid #ccc", padding: 8, textAlign: "right" }}>الطالب</th>
+                  <th style={{ border: "1px solid #ccc", padding: 8, textAlign: "right" }}>البريد الإلكتروني</th>
+                  <th style={{ border: "1px solid #ccc", padding: 8, textAlign: "right" }}>الدرجة</th>
+                  <th style={{ border: "1px solid #ccc", padding: 8, textAlign: "right" }}>النتيجة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.submissions.map((sub) => {
+                  const passed = getPassFail(sub);
+                  return (
+                    <tr key={sub.id}>
+                      <td style={{ border: "1px solid #ccc", padding: 8 }}>{sub.student?.name}</td>
+                      <td style={{ border: "1px solid #ccc", padding: 8 }}>{sub.student?.email}</td>
+                      <td style={{ border: "1px solid #ccc", padding: 8 }}>
+                        {sub.status === "graded" ? sub.score : "—"}
+                      </td>
+                      <td style={{ border: "1px solid #ccc", padding: 8 }}>
+                        {passed === null ? "—" : passed ? "ناجح" : "راسب"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <Link
+          to="/teacher/exams"
+          className="inline-block text-sm font-medium text-indigo-600 hover:text-indigo-700 mt-6"
+        >
+          الرجوع إلى اختباراتي
+        </Link>
+      </div>
     </div>
   );
 };

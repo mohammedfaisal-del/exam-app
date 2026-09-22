@@ -13,6 +13,8 @@ const {
   getMyExams,
   getExamResults,
   deleteExam,
+  deleteQuestion,
+  updateExam,
 } = require("../controllers/examController");
 
 router.get("/", verifyToken, getAvailableExams);
@@ -53,6 +55,12 @@ router.patch(
   requireRole("teacher", "admin"),
   publishExam,
 );
+router.patch(
+  "/:examId",
+  verifyToken,
+  requireRole("teacher", "admin"),
+  updateExam,
+);
 router.delete(
   "/:examId",
   verifyToken,
@@ -70,5 +78,11 @@ router.get(
   verifyToken,
   requireRole("teacher", "admin"),
   getExamResults,
+);
+router.delete(
+  "/questions/:questionId",
+  verifyToken,
+  requireRole("teacher", "admin"),
+  deleteQuestion,
 );
 module.exports = router;
